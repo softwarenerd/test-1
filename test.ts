@@ -48,7 +48,7 @@ class LayoutManager {
 			return Array.from(this._pinnedIndexes)[position];
 		}
 
-		// Compute the rank of the position within the unpinned indexes.
+		// Compute the rank of the unpinned position within the unpinned indexes.
 		const rank = position - this._pinnedIndexes.size;
 
 		// Compute the number of unpinned positions and validate the rank.
