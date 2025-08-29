@@ -19,6 +19,8 @@ class LayoutManager {
 		this._pinnedIndexes = new Set(pinnedIndexes);
 	}
 
+
+
 	/**
 	 * Maps a position to an index.
 	 * @param position The position.
@@ -32,14 +34,16 @@ class LayoutManager {
 
 		// If there are no pinned indexes, the position is the index.
 		if (this._pinnedIndexes.size === 0) {
+			// If there is no entry map, the position is the index, so return it.
 			if (this._entryMap.length === 0) {
 				return position;
-			} else {
-				return this._inverseEntryMap.get(position);
 			}
+
+			// Return the entry-mapped index. This will naturally return undefined, if the index is invalid.
+			return this._entryMap[position];
 		}
 
-		// If the position is pinned, return that index.
+		// If the position is pinned, return its index.
 		if (position < this._pinnedIndexes.size) {
 			return Array.from(this._pinnedIndexes)[position];
 		}
@@ -57,27 +61,28 @@ class LayoutManager {
 		let leftPosition = 0;
 		let rightPosition = this._entryCount - 1;
 		let index = -1;
+		let target = rank + 1;
 		while (leftPosition <= rightPosition) {
 			// Calculate the middle position.
 			const middlePosition = (leftPosition + rightPosition) >>> 1;
 
-			// Calculate the number of pinned positions up to the middle position.
-			const pinnedPositionsUpToMiddlePosition = this.pinnedPositionsUpTo(middlePosition);
-			if (pinnedPositionsUpToMiddlePosition === undefined) {
+			// Calculate the number of pinned positions at or before middle position.
+			const pinnedPositionsAtOrBeforeMiddlePosition = this.pinnedPositionsAtOrBefore(middlePosition);
+			if (pinnedPositionsAtOrBeforeMiddlePosition === undefined) {
 				return undefined;
 			}
 
-			const unpinnedThroughMid = (middlePosition + 1) - pinnedPositionsUpToMiddlePosition;
-			if (unpinnedThroughMid >= rank + 1) {
-				index = middlePosition;
-				rightPosition = middlePosition - 1;
+			// Determine whether to search left or right.
+			if ((middlePosition + 1) - pinnedPositionsAtOrBeforeMiddlePosition >= target) {
+				index = middlePosition;              // This is a candidate entry-map position.
+				rightPosition = middlePosition - 1;  // Keep searching left.
 			} else {
-				leftPosition = middlePosition + 1;
+				leftPosition = middlePosition + 1;   // Keep searching right.
 			}
 		}
 
 		// Return the index.
-		return this._entryMap.length !== 0 ? this._entryMap[index] : index;
+		return index === -1 ? undefined : this._entryMap.length !== 0 ? this._entryMap[index] : index;
 	}
 
 	/**
@@ -127,7 +132,7 @@ class LayoutManager {
 		}
 
 		// Calculate the number of pinned positions that occur before this position.
-		const pinnedPositionsBefore = position > 0 ? this.pinnedPositionsUpTo(position - 1) : 0;
+		const pinnedPositionsBefore = position > 0 ? this.pinnedPositionsAtOrBefore(position - 1) : 0;
 		if (pinnedPositionsBefore === undefined) {
 			return undefined;
 		}
@@ -154,7 +159,7 @@ class LayoutManager {
 	 * @param position The position.
 	 * @returns The count.
 	 */
-	private pinnedPositionsUpTo(position: number): number | undefined {
+	private pinnedPositionsAtOrBefore(position: number): number | undefined {
 		// Count how many pinned positions are less than or equal to position.
 		let count = 0;
 		for (const pinnedIndex of this._pinnedIndexes) {
