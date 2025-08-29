@@ -1,14 +1,14 @@
 class LayoutManager {
 	private _entryCount: number = 0;
-	private _entryMap: number[] | undefined;
+	private _entryMap: number[] = [];
 	private _inverseEntryMap = new Map<number, number>();
 	private _pinnedIndexes: Set<number> = new Set<number>();
 
 	setEntries(entryCount: number, entryMap: number[] | undefined = undefined) {
 		this._entryCount = entryCount;
-		this._entryMap = entryMap;
+		this._entryMap = entryMap ?? [];
 		this._inverseEntryMap.clear();
-		if (this._entryMap) {
+		if (this._entryMap.length !== 0) {
 			for (let position = 0; position < this._entryMap.length; position++) {
 				this._inverseEntryMap.set(this._entryMap[position], position);
 			}
@@ -32,9 +32,7 @@ class LayoutManager {
 
 		// If there are no pinned indexes, the position is the index.
 		if (this._pinnedIndexes.size === 0) {
-			// The position is the index. If there is no entry map, return the position; otherwise,
-			// return the inverse entry-mapped position.
-			if (!this._entryMap) {
+			if (this._entryMap.length === 0) {
 				return position;
 			} else {
 				return this._inverseEntryMap.get(position);
@@ -79,7 +77,7 @@ class LayoutManager {
 		}
 
 		// Return the index.
-		return this._entryMap ? this._entryMap[index] : index;
+		return this._entryMap.length !== 0 ? this._entryMap[index] : index;
 	}
 
 	/**
@@ -96,7 +94,7 @@ class LayoutManager {
 		// If there are no pinned indexes, the index is the position.
 		if (this._pinnedIndexes.size === 0) {
 			// If there is no entry map, the index is the position, so return it.
-			if (!this._entryMap) {
+			if (this._entryMap.length === 0) {
 				// If the index is invalid, return undefined.
 				if (index >= this._entryCount) {
 					return undefined;
@@ -107,7 +105,7 @@ class LayoutManager {
 				return index;
 			}
 
-			// Return the entry-mapped position. This will naturally return undefined, if the index is invalid.
+			// Return the entry-mapped index. This will naturally return undefined, if the index is invalid.
 			console.log("--tested no pinned indexes and entry map");
 			return this._entryMap[index];
 		}
@@ -144,11 +142,11 @@ class LayoutManager {
 	 * @returns The index of the position.
 	 */
 	private positionOfIndex(index: number): number | undefined {
-		if (this._entryMap) {
-			return this._inverseEntryMap.get(index);
+		if (this._entryMap.length === 0) {
+			return index;
 		}
 
-		return this._entryMap ? this._inverseEntryMap!.get(index)! : index;
+		return this._inverseEntryMap.get(index);
 	}
 
 	/**
